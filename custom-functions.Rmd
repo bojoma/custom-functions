@@ -16,9 +16,8 @@ This week you will use a R-package that analyzes NCRMP Fish data. This package e
 [rvc](https://github.com/jeremiaheb/rvc)
 
 ```{r, eval=FALSE}
-install.packages('devtools')
 
-devtools::install_github('jeremiaheb/rvc')
+pak::pak('jeremiaheb/rvc')
 ```
 
 ## Examine the Fish R-package
@@ -40,15 +39,15 @@ regions = vector of regions you
 For example: The following code will get all the data from 2017, 2019, 2021 and 2023 in both the St. Thomas/John and St. Croix regions and set it to the value 'USVI'
 
 ```{r eval=FALSE}
-USVI <- getRvcData(years = 2017:2023, regions =  c("STTSTJ", "STX"))
+USVI <- (getRvcData(years = 2017:2023, regions =  c("STTSTJ", "STX")))
 ```
 
 Now explore a few of the basic functions to see what the function outputs.
 
 ```{r eval=FALSE}
-getDomainBiomass(x = USVI, species = "EPI GUTT")
-getDomainDensity(x = USVI, species = "BAL VETU")
-getDomainOccurrence(x = USVI, species = "SPA VIRI")
+getDomainBiomass(x = USVI, species = c("EPI GUTT", "BAL VETU", "SPA VIRI"))
+getDomainDensity(x = USVI, species = c("EPI GUTT", "BAL VETU", "SPA VIRI"))
+getDomainOccurrence(x = USVI, species = c("EPI GUTT", "BAL VETU", "SPA VIRI"))
 ```
 
 ## Exercise
@@ -61,6 +60,49 @@ hints:
 2)  All plots will need error bars (standard error).
 
 -   $SE = \sqrt{var}$
+library(patchwork)
+
+funden = function(data, sp) {
+  dataframe = getDomainDensity(data, sp)
+    dataframe |> 
+      ggplot(aes(YEAR,density, color = REGION)) +
+      geom_point() +
+      geom_line() + 
+      geom_errorbar(aes(ymin = density - sqrt(var), ymax = density + sqrt(var), width = 0.2)) +
+      labs(title = sp)
+  }
+
+
+funden(USVI,"EPI GUTT")
+
+funmass = function(data, sp) {
+    dataframe = getDomainBiomass(data, sp)
+      dataframe |> 
+      filter(SPECIES_CD == sp) |> 
+      ggplot(aes(YEAR,biomass, color = REGION)) +
+      geom_point() +
+      geom_line() + 
+      geom_errorbar(aes(ymin = biomass - sqrt(var), ymax = biomass + sqrt(var), width = 0.2)) +
+      labs(title = sp)
+
+  }
+
+funmass(USVI, "EPI GUTT")
+
+funocc = function(data, sp) {
+   dataframe = getDomainOccurrence(data, sp)
+    occ |> 
+      filter(SPECIES_CD == sp) |> 
+      ggplot(aes(YEAR,occurrence, color = REGION)) +
+      geom_point() +
+      geom_line() + 
+      geom_errorbar(aes(ymin = occurrence - sqrt(var), ymax = occurrence + sqrt(var), width = 0.2)) +
+      labs(title = sp)
+  }
+
+
+p = funden(USVI,"EPI GUTT") / funmass(USVI,"EPI GUTT") / funocc(USVI,"EPI GUTT")
+p
 
 3)  Use the 'rvc' package functions and some 'tidyverse' functions for all your needs.
 
